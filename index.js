@@ -280,9 +280,14 @@ function processJob(pipelines) {
     var component = -1;
 
     var headComplete = [CONFIG.head[0]==0, CONFIG.head[1]==0];
+    var head = 0;
     while (!jobDone) {
-        for (var head = 0; head < CONFIG.head.length; head++) {
-            if (headComplete[head]) continue;
+
+        while (head < CONFIG.head.length) {
+            if (headComplete[head]) {
+                head ++;
+                continue;
+            }
             var nozzle = CONFIG.head[head];
 
             var part = getNextComponetForNozzle(pipelines, nozzle);
@@ -292,6 +297,7 @@ function processJob(pipelines) {
                 part.head = head;
                 part.skip = 0;
                 job.push(part);
+                head++; // go to next head
             } else {
                 // check now, will we need to change in the future?
                 console.log("Pipeline for nozzle " + nozzle + " is empty, lets check next pipeline");
@@ -302,37 +308,21 @@ function processJob(pipelines) {
                     break;
                 }
 
-                var howManyNozzlesToChange = 0;
-                for (var i=0; i<CONFIG.head.length; i++) {
-                    if (CONFIG.head[i] == nozzle) {
-                       howManyNozzlesToChange++;
-                    }
-                }
-
-                console.log("Changing " + howManyNozzlesToChange + " nozzles");
-                var nextNozzles = getNextNozzles(pipelines, howManyNozzlesToChange);
+                var nextNozzles = getNextNozzles(pipelines, 1);
 
                 var nozzlesToChangeLeft = nextNozzles.length;
                 var nozzleIndex = 0;
-                for (var i=0; ((i < CONFIG.head.length) && (nozzlesToChangeLeft > 0)); i++) {
-                    if (CONFIG.head[i] == nozzle) {
-                        if (nextNozzles[nozzleIndex] != 0) {
-                            changeNozzle(i, nextNozzles[nozzleIndex], component + 1);
-                            nozzlesToChangeLeft--;
-                            nozzleIndex++;
-                        }
-                    }
-                }
 
-                for (var i=0; i<CONFIG.head.length; i++) {
-                    if (CONFIG.head[i] == nozzle) {
-                        console.log("Disabling head " + i);
-                        headComplete[i] = true;
-                    }
+                if (nextNozzles[0] != 0) {
+                    changeNozzle(head, nextNozzles[nozzleIndex], component + 1);
+                } else {
+                    console.log("Disabling head " + head);
+                    headComplete[head] = true;
                 }
-                break; // restart heads
+                // restart same head
             }
-        }
+        } // while heads
+        head = 0;
     }
 
     jobDone = false;
