@@ -311,10 +311,9 @@ function processJob(pipelines) {
                 var nextNozzles = getNextNozzles(pipelines, 1);
 
                 var nozzlesToChangeLeft = nextNozzles.length;
-                var nozzleIndex = 0;
 
                 if (nextNozzles[0] != 0) {
-                    changeNozzle(head, nextNozzles[nozzleIndex], component + 1);
+                    changeNozzle(head, nextNozzles[0], component + 1);
                 } else {
                     console.log("Disabling head " + head);
                     headComplete[head] = true;
