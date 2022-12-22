@@ -4,7 +4,7 @@ Download.
 
 run> npm install
 
-run> node index.js --in test --config ./conf/config.json --feeders ./conf/feeders.json --input ./data/in.csv --output ./data/out.csv
+run> node index.js --config ./conf/config.json --feeders ./conf/feeders.json --input ./data/in.csv --output ./data/out.csv
 
 conf/feeders.json - feeder definition
 conf/config.json  - global definitions
