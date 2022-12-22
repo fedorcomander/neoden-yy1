@@ -1,0 +1,16 @@
+{
+  "name": "kikad2yy1",
+  "version": "1.0.0",
+  "description": "Kicad to neoden converter",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "FedorCommander",
+  "license": "MIT",
+  "dependencies": {
+    "csv": "^6.2.5",
+    "fs": "^0.0.1-security",
+    "minimist": "^1.2.7"
+  }
+}
