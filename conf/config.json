@@ -2,5 +2,6 @@
     "xoffset":0,
     "yoffset":0,
     "head":[1,2],
-    "changer":[0,1,3]
+    "changer":[0,1,3],
+    "headOffset": [0, 0]
 }

@@ -122,7 +122,8 @@ function loadConfig(filename) {
         var data = JSON.parse(fs.readFileSync(filename, 'utf8'));
         return Object.assign({
             xoffset: 0,
-            yoffset: 0
+            yoffset: 0,
+            headOffset: [0, 0]
         }, data);
     } catch (err) {
         console.log("Unable to load config!", err);
@@ -362,7 +363,7 @@ function exportCSV(job, filename) {
     stringifier.write(empty);
     stringifier.write(['Designator','Comment','Footprint','Mid X(mm)','Mid Y(mm) ','Rotation','Head ','FeederNo','Mount Speed(%)','Pick Height(mm)','Place Height(mm)','Mode','Skip']);
     job.forEach(part => {
-        stringifier.write([csvSafe(part.reference), csvSafe(part.value), csvSafe(part.footprint), part.x, part.y, part.orientation, part.head + 1, part.feeder.id, part.feeder.speed, part.feeder.pickheight, part.feeder.placeheight, part.feeder.mode, part.skip]);
+        stringifier.write([csvSafe(part.reference), csvSafe(part.value), csvSafe(part.footprint), part.x, part.y, part.orientation, part.head + 1, part.feeder.id, part.feeder.speed, part.feeder.pickheight + CONFIG.headOffset[part.head], part.feeder.placeheight + CONFIG.headOffset[part.head], part.feeder.mode, part.skip]);
     });
     stringifier.pipe(csvStream);
 }
