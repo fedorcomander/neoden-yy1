@@ -105,8 +105,10 @@ function loadFeeders(filename) {
                 footprint: '',
                 mode: 3,
                 speed: 100,
-                pickheight: 0.00,
-                placeheight: 0.00
+                pickheight: 0.00, // in millimeters
+                placeheight: 0.00, // in millimeters
+                orientation: 0, // for extra Rotation
+                skip: 0 // to disable feeder
             }, feeder));
         });
         return ret;
@@ -133,13 +135,20 @@ function loadConfig(filename) {
 
 /* From kicad to map TODO: make it taking format from command line */
 function convertPart(row) {
+
+    var orient = +row[5] > 180 ? +row[5] - 180 : +row[5];
+    if (row[6] === "bottom") {
+      orient = -orient;
+      console.log("Reverse bottom");
+    }
+
     return {
         reference: row[0],
         value: row[1],
         footprint: row[2],
         x : +(+row[3] + CONFIG.xoffset).toFixed(2),
         y : +(+row[4] + CONFIG.yoffset).toFixed(2),
-        orientation : +row[5] > 180 ? +row[5] - 180 : +row[5]
+        orientation : orient
     };
 }
 
@@ -151,9 +160,14 @@ function loadParts(filename) {
             .pipe(parse({ delimiter: ",", from_line: 2 }))
             .on("data", function (row) {
                 var tmp = convertPart(row);
-                // Skip fiducials
-                if (tmp.value.toLowerCase() !== "fiducial") {
+                if (CONFIG.excludeFootprints !== undefined) {
+                    if (!CONFIG.excludeFootprints.includes(tmp.footprint)) {
+                      ret.push(tmp);
+                    }
+                } else {
+                  if (tmp.value.toLowerCase() !== "fiducial") {
                     ret.push(tmp);
+                  }
                 }
             })
             .on("end", () => {
@@ -168,9 +182,15 @@ function assignFeedersToParts(parts, feeders) {
     parts.forEach(part => {
             var matchedFeeder = feeders.find(( feeder ) => ((feeder.value.toLowerCase().trim() === part.value.toLowerCase().trim())
                 && (feeder.footprint.toLowerCase().trim() === part.footprint.toLowerCase().trim()) ) );
-            if (matchedFeeder !== undefined) {
+            if ((matchedFeeder !== undefined) && (matchedFeeder.skip == 0)) {
                 part.skip = 0;
                 part.feeder = matchedFeeder;
+
+                if (matchedFeeder.orientation !== undefined) {
+                  part.orientation += matchedFeeder.orientation;
+                  if (part.orientation > 180) part.orientation -= 180;
+                }
+
             } else {
                 part.skip = 1;
                 part.feeder = feeders.find(( feeder ) => feeder.id === 0 );
@@ -292,9 +312,10 @@ function processJob(pipelines) {
             var nozzle = CONFIG.head[head];
 
             var part = getNextComponetForNozzle(pipelines, nozzle);
+
             if (part !== undefined) {
                 component++;
-                console.log("#" + component + " > processing head " + head + " with nozzle " + nozzle);
+                console.log("#" + component + " > processing head " + head + " with nozzle " + nozzle + " Part: " + part.value + " " + part.footprint);
                 part.head = head;
                 part.skip = 0;
                 job.push(part);
@@ -330,7 +351,7 @@ function processJob(pipelines) {
         var part = getNextComponetForNozzle(pipelines, 99);
         if (part !== undefined) {
             component++;
-            console.log("#" + component + " > will be skipped.");
+            console.log("#" + component + " > will be skipped. " + " Part: " + part.value + " " + part.footprint);
             part.head = 0;
             part.skip = 1;
             job.push(part);
